@@ -257,6 +257,9 @@ RUN sed --in-place 's/host_name.*/host_name              docker-nagios4-victorop
     sed --in-place 's/active_checks_enabled.*0/active_checks_enabled      1/g' /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg && \
     sed --in-place 's/members.*/members            VictorOps/g' /opt/nagios/etc/objects/contacts.cfg
 
+# Ensure the script to set the test service state is executable
+RUN chmod +x /opt/victorops/nagios_plugin/service/setTestSvcState
+
 EXPOSE 80
 
 VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"

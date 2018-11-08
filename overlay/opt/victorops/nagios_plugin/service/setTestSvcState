@@ -1,0 +1,11 @@
+#!/bin/bash
+desired_state=$1
+state_file=/opt/victorops/nagios_plugin/service/vo_test_svc.state
+
+temp_file=$(mktemp)
+cp $state_file $temp_file
+sed --in-place "s/ *<--//g" $temp_file
+sed --in-place "s/^\($desired_state.*\)/\1    <--/" $temp_file
+mv $temp_file $state_file
+chmod 644 $state_file
+cat $state_file

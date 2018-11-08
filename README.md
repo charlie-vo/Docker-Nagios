@@ -18,7 +18,7 @@ docker pull jasonrivers/nagios:latest
 
 ### Running
 
-Run with the example configuration with the following:
+Run with the example configuration with the following (see below for VictorOps configuration requirements):
 
 ```sh
 docker run --name nagios4 -p 0.0.0.0:8080:80 jasonrivers/nagios:latest
@@ -61,4 +61,21 @@ The default credentials for the web interface is `nagiosadmin` / `nagios`
 * WL-Nagios-Plugins -  custom plugins from William Leibzon [<https://github.com/willixix/WL-NagiosPlugins>]
 * JE-Nagios-Plugins -  custom plugins from Justin Ellison [<https://github.com/justintime/nagios-plugins>]
 
+### VictorOps plugin:
+The container must be created with organization ID and alert keys specified as environment variables. 
 
+For example:
+
+```sh
+docker run -d -e VO_ORGANIZATION_ID=<org_id> -e VO_ORGANIZATION_KEY=<nagios_alert_key> --name vo-nagios4 -p 0.0.0.0:8088:80 vo-nagios4
+```
+
+You can affect the state of the VictorOps Test Service with the setTestSvcState command. 
+
+For example:
+
+```sh
+docker exec vo-nagios4 /opt/victorops/nagios_plugin/service/setTestSvcState WARNING
+```
+
+Allowed values are `OK`, `WARNING` and `CRITICAL`.
