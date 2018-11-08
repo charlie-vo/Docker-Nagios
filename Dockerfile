@@ -78,6 +78,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmpd                               \
         snmp-mibs-downloader                \
         unzip                               \
+        vim                                 \
         python                              \
                                                 && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
@@ -235,8 +236,29 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
     ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf    && \
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
+# Install VictorOps plugin
+RUN echo "deb http://software.victorops.com/apt precise main" > /etc/apt/sources.list.d/victorops.list && \
+    curl https://software.victorops.com/keyfile | apt-key add - && \
+    apt-get update && \
+    apt-get install victorops-nagios
+
+# Enable VictorOps checks and enable environment macros.  Change 'localhost' to 'docker-nagios4-victorops'
+RUN echo "# VictorOps:" >> ${NAGIOS_HOME}/etc/nagios.cfg && \
+    echo "cfg_file=/opt/victorops/nagios_plugin/nagios_conf/victorops.cfg" >> ${NAGIOS_HOME}/etc/nagios.cfg && \
+    echo "cfg_file=/opt/victorops/nagios_plugin/service/vo_test_svc.cfg" >> ${NAGIOS_HOME}/etc/nagios.cfg && \
+    sed --in-place "s/enable_environment_macros=0/enable_environment_macros=1/g" ${NAGIOS_HOME}/etc/nagios.cfg && \
+    sed --in-place "s/localhost/docker-nagios4-victorops/g" ${NAGIOS_HOME}/etc/objects/localhost.cfg
+
+# Configure VictorOps plugin, excluding org credentials; those need to be set as environment variables when the container is created
+# * change host name and monitor name * enable active checks of ack-back * make VictorOps the only contact notified *
+RUN sed --in-place 's/host_name.*/host_name              docker-nagios4-victorops/g' /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg && \
+    sed --in-place 's/host_name.*/host_name              docker-nagios4-victorops/g' /opt/victorops/nagios_plugin/service/vo_test_svc.cfg && \
+    sed --in-place 's/VO_MONITOR_NAME/VO_MONITOR_NAME    docker-nagios4-victorops/g' /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg && \
+    sed --in-place 's/active_checks_enabled.*0/active_checks_enabled      1/g' /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg && \
+    sed --in-place 's/members.*/members            VictorOps/g' /opt/nagios/etc/objects/contacts.cfg
+
 EXPOSE 80
 
 VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 
-CMD [ "/usr/local/bin/start_nagios" ]
+CMD [ "/usr/local/bin/start" ]

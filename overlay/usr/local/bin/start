@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Configure the VictorOps plugin from the environment variables
+sed --in-place "s/_VO_ORGANIZATION_ID.*/_VO_ORGANIZATION_ID           $VO_ORGANIZATION_ID/g" /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg
+sed --in-place "s/_VO_ORGANIZATION_KEY.*/_VO_ORGANIZATION_KEY           $VO_ORGANIZATION_KEY/g" /opt/victorops/nagios_plugin/nagios_conf/victorops.cfg
+
+. $(dirname $BASH_SOURCE)/start_nagios
